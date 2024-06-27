@@ -108,3 +108,79 @@ btrfs-zero-log      efibootdump    mkfs.btrfs     ping4                 tar
 
 - these files are generally text file that can be edited for system configuration
 ```
+
+## 7. /home:
+```
+- Contains personal directories for users
+- User-specific settings, documents, and other files are stored here
+```
+
+## 7. /lib:
+```
+- Contains library files that supports the binaries located under /bin and /sbin
+- Depending on the system, we might also have additional lib folders for additional
+architectures
+- Example: /lib32, /lib64
+- Nowadays: Being merged into /usr/lib (usrmerge)
+```
+
+## 8. /mnt:
+```
+Mount points for additional filesystems
+```
+
+## 9. /opt:
+```
+Optional application software packages can be stored here
+```
+
+## 10. /root:
+```
+- Contains the personal data for the root user (home folder of the root user)
+```
+
+## 11. /run:
+```
+- Run-time data
+- Files here will be removed / emptied during boot, or will be discarded on shutdown
+```
+
+## 12. /sbin:
+```
+- Contains essential system binaries that are generally used by the root user
+- Nowadays: Being merged into /usr/sbin (usrmerge)
+```
+
+## 13: /srv:
+```
+- Files for services (if we don't store them in /var)
+- Quite often, data offered by FTP servers
+```
+
+## 14: /sys:
+```
+- Information about devices, drivers and kernel features
+```
+
+## 15: /tmp:
+```
+- Contains temporary file created by system and users
+- These files are typically deleted on reboot
+```
+
+## 16: /usr:
+```
+- Contains shareable, read-only data
+- This includes system binaries, libraries, documentation, and source-code for various system
+programs
+- Usually, files in this folders could be shared between multiple computers
+- But:
+    + /usr/local:
+    This folder is for files that should not be shared between multiple computers
+```
+
+## 17: /var:
+```
+- Contains variable data files such as logs, databases, websites, and email, among other things
+- This directory's contents changes as the system runs
+```
