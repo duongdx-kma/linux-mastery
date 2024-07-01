@@ -1,0 +1,12 @@
+# /etc/systemd/system/my-custom-log.service
+
+[Unit]
+Description=Ping a server and log it
+Requires=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ping_and_log.sh
+
+[Install]
+WantedBy=multi-user.target

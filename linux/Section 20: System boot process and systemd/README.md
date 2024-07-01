@@ -91,6 +91,147 @@ program:
 ```
 
 ### 2. systemd: Structuring and Customizing
+```
+[Unit]:
+    - A general configuration for the unit
+[Service]:
+    - If this unit is a service, we should write all the configuration for the service into this section
+[Install]:
+    - Here, we specify, how the unit should be installed
+```
+
+**a. [Unit]**
+```
+Description:
+- Brief explanation, helps users understand the purpose of the service
+
+Documentation:
+- Links to relevant documentation
+
+Requires:
+- Ensures other units are activated before the current unit
+- If the required unit fails to start, the current unit will not start
+
+Wants:
+- Similar to Requires, but the current unit will start even if the wanted unit fails
+- Useful for optional dependencies
+
+After:
+- Ensures the current unit starts after specified units
+- Helps to define the order of unit activation
+
+Before:
+- Ensures the current unit starts before specified units
+- Also helps to define the order of unit activation
+```
+
+**b. [Service]**
+```
+Type:
+- Defines the process type and startup behavior
+- Examples: simple, exec, forking, oneshot,...
+
+ExecStart:
+- Command to start the service
+- Can include arguments and options
+- But it's not a full bash command!
+
+ExecStop:
+- Command to stop the service (optional)
+
+Restart:
+- Defines when the service should be automatically restarted
+- Examples: no, on-success, on-failure, on-abnormal, on-abort, always
+
+User:
+- User under which the service should be run
+
+Environment:
+- Defines environment variables for the service
+```
+
+**c. [Install]**
+```
+WantedBy:
+- Specifies the target(s) that should include this unit as a dependency
+- Common targets: multi-user.target, graphical.target
+- Enables the unit to be started automatically at boot when "systemctl enable" is used
+```
+
+### 3. `systemd`: Testing customize config: testing with haproxy.service
+```
+# step1:
+> sudo cp /lib/systemd/system/haproxy.service /etc/systemd/system/haproxy.service
+
+# step2:
+> sudo systemctl daemon-reload
+
+# step3:
+> sudo systemctl disable haproxy
+
+# step4:
+> sudo systemctl enable haproxy
+
+# step 5:
+> sudo systemctl reload haproxy
+```
+
+
+### 4. `systemd`: testing own service
+```
+# check file
+
+- my-custom-log.service
+- ping_and_log.sh
+```
+
+### 5. `timer`:
+```
+# check file
+
+- my-custom-log.timer
+```
+
+**command**
+```
+# start timer:
+- sudo systemctl start [timer_name].timer
+- sudo systemctl start my-custom-log.timer
+
+# list all timer:
+> sudo systemctl list-timers
+```
+
+
+### 6. Systemd: Targets
+```
+Target:
+- Groups units logically to a goal
+- Managed by .target unit files
+```
+
+**a. To get the (current) default `target`:**
+```
+> sudo systemctl get-default
+```
+
+**b. To switch `target`, without rebooting:**
+```
+> sudo systemctl isolate [target-name].target
+
+# example
+> sudo systemctl isolate multi-user.target
+```
+
+**c. We can list available `targets` with the following command:**
+```
+> sudo systemctl list-units --type target --all
+```
+
+**We could also change the current default `target`:**
+```
+> sudo systemctl set-default multi-user.target
+```
 
 ---
 
@@ -179,4 +320,86 @@ Control Group                                                                   
 /system.slice/docker.service                                                                            51    0.0   107.2M        -        -
 /system.slice/containerd.service                                                                        34    0.0    79.3M        -        -
 /system.slice/haproxy.service
+```
+
+
+---
+
+## IV. `systemd-journald`
+
+### 1. introduction:
+
+**a. systemd-journald:**
+```
+- Part of the systemd suite
+- Manages system logs
+- Replaces traditional syslog
+```
+
+**b.Key features:**
+```
+- Binary format for efficient storage
+- Centralized logging solution
+- Automatic log rotation and retention
+- Indexing and querying capabilities
+- Also logs messages that happened during boot
+```
+
+### 2. journalctl:
+
+**a. list all logs**
+```
+> sudo journaldctl
+```
+
+**b. show currunt boot logs**
+```
+> sudo journaldctl -b
+```
+
+**c. Filter by unit:**
+```
+> sudo journalctl -u <unit>
+
+# example
+
+> sudo journalctl -u apache2
+> sudo journalctl -u my-custom-log
+```
+
+**d.Show all available boots:**
+```
+> sudo journalctl --list-boots
+```
+
+**e.Filter by time range:**
+```
+> sudo journalctl --since "<time>" --until "<time>"
+
+# example
+
+> sudo journalctl -u apache2 --since '2024-06-29' --until '2024-06-30'
+> sudo journalctl -u my-custom-log --since '2024-06-29' --until '2024-06-30'
+```
+
+**f.Reverse output:**
+```
+> journalctl -r
+```
+
+**g. Follow logs in real-time:**
+```
+> journalctl -f
+```
+
+**j.We can also send a message into the journalctl log:**
+```
+# command:
+
+> echo 'message' | systemd-cat
+
+# example for check
+> echo 'message testiinggg' | systemd-cat
+
+>  journalctl -f -t me
 ```

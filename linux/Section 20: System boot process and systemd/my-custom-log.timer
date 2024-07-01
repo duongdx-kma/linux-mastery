@@ -1,0 +1,12 @@
+#
+# /etc/systemd/system/my-custom-log.timer
+
+[Unit]
+Description=Run the network logging service on boot
+
+[Timer]
+OnActiveSec=5min
+Unit=my-network-log.service
+
+[Install]
+WantedBy=timers.target
