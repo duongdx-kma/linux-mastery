@@ -116,6 +116,8 @@ files are deleted
 list up blocks
 ```
 > sudo lsblk --output NAME,FSTYPE,LABEL,UUID,MODE
+or
+> sudo lsblk -f
 ```
 
 result:
@@ -129,7 +131,7 @@ sdc    iso9660 cidata          2023-06-07-16-13-08-00               brw-rw----\
 
 **step2: create file system:**
 ```
-> mkfs -t [filesystem_type] [block_name]
+> mkfs -t [filesystem_type] [device_name]
 > mkfs -t ext4 /dev/sdb
 ```
 
@@ -158,7 +160,7 @@ create destination folder
 
 mounting data
 ```
-> mount [block_name] [dest_path]
+> mount [device_name] [dest_path]
 > mount /dev/sdb /tmp/data
 ```
 
@@ -184,7 +186,7 @@ tmpfs           301M     0  301M   0% /run/user/1002
 
 command un-mount
 ```
-> umount [dest_path] or umount [block_name]
+> umount [dest_path] or umount [device_name]
 > umount /tmp/data or umount /dev/sdb
 ```
 
@@ -210,3 +212,374 @@ drwxr-xr-x  3 root root  1024 Jun 30 15:57 .
 drwxrwxrwt 12 root root  4096 Jun 30 16:19 ..
 ```
 
+## III. Volume and Partition
+
+### 1. What is a volume ?
+
+**a. Partition**
+```
+- Partition is a part of a physical drive
+- Separated from other parts of the drive
+```
+
+**b. Volume:**
+```
+- Volume is a logical storage unit on our computer
+- It usually appears as an accessible driver or partition
+- It can be more than just a partition:
+   + Multiple partitions can be combined into one logical volume (LVM)
+   + Or a volume can be stored on another computer and accessed
+through the network
+```
+
+### 2. what is a mount ?
+
+**a. the idea**
+```
+- We connect a filesystem to our directory tree
+- This allows us to make it accessible to our programs
+```
+
+**b. we can mounting**
+```
+External, removable media (usually into a subfolder of /media)
+   + Internal, permanent volumes (usually into a subfolder of /mnt)
+   + External storage servers (for example: FTP)
+   + Folders into other folders (bind mount)
+- After we mounted a drive, it will become part of our directory tree
+- And we can just cd into that folder
+- Let's now have a look at how Ubuntu Desktop handles mounting
+```
+
+## IV. Mounting:
+
+### 1. list up all devices
+```
+lsblk -f
+The parameter -f tells the program that it should also show information about the filesystem
+```
+
+### 2. Command to mounting
+
+**step1: create destination folder**
+```
+- mkdir /mnt/backups
+```
+
+**step2: mounting command**
+```
+> mount [device] [mount_point]
+
+#Example:
+> mount /dev/sdb2 /mnt/backups
+
+# We can also specify the filesystem manually: -t ext4:
+> mount -t ext4 /dev/sdb2 /mnt/backups
+
+
+# Or add additional options (mounts as read-only):
+> mount -o ro ext4 /dev/sdb2 /mnt/backups
+```
+
+**Step3: verify the mount:**
+```
+- mount or df -h
+```
+
+**Step4: unmount the drive with one of those commands:**
+```
+> umount /dev/sdb2
+> umount /mnt/backups
+```
+
+### 3. Mount option:
+```
+Mount supports various mount options
+Example options (ext4):
+- ro: Read only
+- rw: (default): Read + write
+- noexec: Disables execution of executable files on the mounted filesystem
+- nosuid:
+   + Disables the set-user-identifier and the set-group-identifier on the mounted filesystem
+   + Prevents a potential security risk!
+- noatime: do not update access time when file is read
+```
+
+### 4 test `Mounting` option with `exfat`
+
+**step1: install**
+```
+# Ubuntu:
+> sudo apt install exfat-fuse exfat-utils
+
+# Centos:
+> sudo dnf install exfatprogs
+```
+
+**step2: create `filesystem`**
+```
+> sudo mkfs.exfat  /dev/sdb
+```
+
+**step3: mounting to folder and specific own user**
+```
+# check user:
+> id
+
+# result:
+uid=1002(deploy) gid=1002(deploy) groups=1002(deploy),27(sudo),998(docker)
+
+> sudo mount -t exfat -o uid=1002,gid=1002,umask=0027 /dev/sdb /mnt/data
+```
+
+## V. /etc/fstab:
+
+### 1.What is the /etc/fstab?
+```
+- A system configuration file in Linux
+- Defines how storage devices and partitions should be mounted
+- It is being read during boot and allows us to automatically mount
+volumes
+```
+
+### 2. /etc/fstab record format?
+```
+Each line represents a filesystem to be mounted
+Fields (columns) are separated by spaces or tabs
+- 1. Device identifier (UUID or device path)
+- 2. Mount point
+- 3. Filesystem type
+- 4. Mount options
+- 5. Dump option (dump is a backup utility, 0 = no backup)
+- 6. Filesystem check order
+- (fsck priority, 1 = root, 2 = non-root)
+```
+
+### 3. demo:
+**a. get Device identifier (UUID)**
+```
+# run command to get UUID:
+> lsblk -f
+```
+
+**b. /etc/fstab record example**
+```
+Example entry of the /etc/fstab file:
+- UUID=aec067b7-c3cc-4b0d-97da-c4be187204f9 /mnt/backups ext4 defaults
+0 2
+
+# explain
+- Device identified by UUID: aec067b7-c3cc-4b0d-97da-c4be187204f9
+- Mount point: /mnt/backups
+- Filesystem type: ext4
+- Mount options: defaults (rw, suid, dev, exec, auto, nouser, and async)
+- auto: should be mounted automatically
+- nouser: Can only be mounted with root privileges
+- async: reads and writes should be async. Improves performance, but can be
+bad for data integrity on a power loss
+- Dump option: 0 (disabled)
+- Filesystem check order: 2 (non-root filesystem)
+```
+
+**c. /etc/fstab file content**
+```
+LABEL=cloudimg-rootfs	/	 ext4	defaults	0 1
+
+#========================== This item here ==========================
+UUID=4E0A-AD90 /mnt/data exfat uid=1002,gid=1002,umask=0027 0 2
+```
+
+**d. Refresh after mounting**
+```
+> sudo mount -a
+```
+
+## VI. checking a filesystem in case errors:
+**command**
+```
+> sudo fsck [device_name]
+
+or
+
+> sudo fsck.[device_type] [device_name]
+
+or
+
+> journalctl -b
+```
+
+**example**
+```
+> sudo fsck /dev/sda1
+
+> sudo fsck.ext4 /dev/sda1
+
+> journalctl -b
+```
+
+## VII. Reduce filesystem and create new partitions:
+
+**step1: usually, the filesystem needs to be unmounted**
+```
+# command:
+> unmount [partition_name]
+
+# example:
+> unmount /dev/sdc1
+```
+
+**step2: we must run the filesystem check**
+```
+# command:
+> fsck [partition_name] or fsck.[device_type] [partition_name]
+
+# example:
+> fsck /dev/sdc1 or fsck.ext4 /dev/sdc1
+```
+
+### 3: resize the filesystem
+**command:**
+```
+> resize2fs [partition_name] [amount_of_volume]
+```
+
+**example:**
+```
+> resize2fs /dev/sdc1 500M
+```
+
+#### 4: resize the partition: using `parted`:
+**command**
+```
+> parted [device_name]
+```
+
+**step0: go to partition:**
+```
+> parted /dev/sdc
+```
+
+**step1. print all partition**
+```
+# command
+> (parted) print
+
+# result
+Number  Start   End     Size    Type     File system  Flags
+ 1      1049kB  2048MB  2047MB  primary  ext4
+```
+
+**step2. resize `partition_1`**
+```
+# command:
+> (parted): resizepart
+
+# Result:
+
+> (parted): Partition number? 1
+> (parted): End?  [2048MB]? 513
+> (parted): Warning: Shrinking a partition can cause data loss, are you sure you want to continue?
+> (parted): Yes/No? yes
+```
+
+**step3. re-check:**
+```
+# command:
+> (parted): print
+
+# result (partition have just reduced):
+Number  Start   End     Size    Type     File system  Flags
+ 1      1049kB  513MB  512MB  primary  ext4
+```
+
+## VII. Reduce filesystem and create new partitions:
+
+### step 1: create new partition for testing:
+
+**step 1.1: go to device**
+```
+> parted /dev/sdc
+```
+
+**step 1.2 create new  partition**
+```
+> (parted) mkpart
+> (parted) Partition type?  primary/extended? primary
+> (parted) File system type?  [ext2]? ext4
+> (parted) Start? 526MB
+> (parted) End? 1038MB
+
+# check result:
+> (parted) print
+Model: VBOX HARDDISK (scsi)
+Disk /dev/sdc: 2147MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start   End     Size   Type     File system  Flags
+ 1      1049kB  525MB   524MB  primary  ext4
+ 2      526MB   1038MB  512MB  primary  ext4         lba
+```
+
+**step 1.3 create new  folder and mounting data**
+```
+> mkdir /mnt/data_backup2
+> mkfs.ext4 /dev/sdc2
+> mount /dev/sdc2 /mnt/data_backup2
+```
+
+### step 2: extend partition:
+
+**step 2.0: go to partition:**
+```
+> parted /dev/sdc
+```
+
+**step 2.1. print all partition**
+```
+# command
+> (parted) print
+
+# result
+Number  Start   End     Size   Type     File system  Flags
+ 1      1049kB  525MB   524MB  primary  ext4
+ 2      526MB   1038MB  512MB  primary  ext4         lba
+
+```
+
+**step 2.2. resize `partition_1`**
+```
+# command:
+> (parted): resizepart
+
+# Result:
+
+> (parted): Partition number? 2
+> (parted): End?  [1038MB]? 1550  
+
+# check
+> (parted) print
+Number  Start   End     Size    Type     File system  Flags
+ 1      1049kB  525MB   524MB   primary  ext4
+ 2      526MB   1550MB  1024MB  primary  ext4         lba
+
+```
+
+**step 2.3. re-check:**
+```
+# command:
+> (parted): print
+
+# result (partition have just reduced):
+Number  Start   End     Size    Type     File system  Flags
+ 1      1049kB  513MB  512MB  primary  ext4
+```
+
+**step 2.4. restart partition:**
+```
+> sudo resize2fs /dev/sdc2
+```
