@@ -233,14 +233,26 @@ In a corporate setting:
 - If we wand to send a packet to another computer in our network... we can directly send the frame to it
 ```
 
-**Example1: We want to send a packet to another computer in our local network**
+***Example1: We want to send a packet to another computer in our local network***
 ```
 - We can send the `FRAME` directly to it:
 - Btw this is always the case, even if  one computer connects through WiFi, and the other one through a LAN cable
 - In this case, the router part of the router `will not be involved` - the wireless access component of the router will be responsible for sending this packet to the WiFi connected device
+
+
+# check image bellow:
 ```
 
-**Example2: We want to send a packet to the internet**
+send-packet-same-mw-step1:
+
+![alt send-packet-same-mw-step1](send-packet-same-mw-step1.png)
+
+send-packet-same-mw-step2:
+
+![alt send-packet-same-mw-step2](send-packet-same-mw-step2.png)
+
+
+***Example2: We want to send a packet to the internet***
 ```
 - We want to send a packet to the internet
 - In this case, we need to send a packet to the router
@@ -434,7 +446,6 @@ traceroute to facebook.com (157.240.7.35), 50 hops max, 60 byte packets
 48  * * *
 49  * * *
 50  * * *
-
 ```
 
 **Traceroute Output**:
@@ -664,7 +675,6 @@ have gotten lost on the way
 ```
 
 ### 7. `Layer4 Transport layer` - Network Address Translation `NAT`:
-
 ```
 -  Let's say you want to make a service available to the internet
 -  And you're behind a NAT
@@ -680,4 +690,263 @@ accessing dynamic IPs (such as "dyndns" or others)
 -  Then you could use a domain such as:
 -  myhost123.dyndns.com to access your local computer from the
 internet
+```
+
+## VI. Layer5: Session Layer
+
+**consideration:**
+```
+OSI model: Layer 5-7
+Bash & Linux CLI
+- The layer 5-7 are often handled completely by the application
+- Thus, the distinction between those layers is no longer as clear as before
+- Sometimes they also use specific features of the layers below
+- Still, those layers give us an overview about how an application can be structured
+```
+
+**Layer 5 Session layer**:
+```
+- Establishes, maintains, terminates connections
+- Supports communication between applications
+
+# Examples of Layer 5 protocols
+- Network File System (NFS): Remote file access over a network
+- Remote Procedure Call (RPC): Request services from remote devices
+- Session Control Protocol (SCP): Manages sessions between devices
+```
+
+## VII. Layer6: Presentation layer
+
+Presentation Layer
+```
+- Deals with data representation
+- Ensures data compatibility and security
+```
+
+Functions at Layer 6
+```
+- Data conversion
+- Transform data formats (e.g., ASCII, EBCDIC, Unicode)
+```
+
+Encryption/decryption
+```
+- Secure data transmission (e.g., SSL/TLS)
+- Data compression
+- Reduce data size (deflate, brotli compression,...)
+```
+
+## VIII. Layer7: Application layer
+
+### 1. introduction:
+```
+The application layer are the protocols that our application can then use
+
+Examples would be:
+- HTTP / HTTPS (for websites)
+- IMAP (for accessing emails on a remote server)
+- SSH (accessing a remote shell / scp,...)
+- POP3 (downloading e-mails)
+- Proprietary protocols (for example, custom VOIP implementations)
+```
+
+### 2. DNS protocol:
+```
+DNS: Domain Name System
+- Application Layer protocol
+- Translates domain names to IP addresses
+- Facilitates human-readable access to websites and services
+- The idea:
+- Instead of typing in the IP-address, we just want to type in "google.com", and our computer should do the rest
+```
+
+![alt dns-resolving](dns-resolving.png)
+
+### 3. DNS record type:
+```
+- A: Maps a domain name to an IPv4 address
+- AAAA: Maps a domain name to an IPv6 address
+- CNAME: Provides an alias for another domain name
+- MX: Specifies mail servers for a domain
+- NS: Lists authoritative name servers for a domain
+```
+
+We can list the received DNS entries with the following command:
+```
+> host <server>
+> host -a <server>
+
+- Example:
+> host -a google.com
+```
+
+### 3. DNS problems:
+
+**a. the problem:**
+```
+- DNS has been designed when the internet significantly smaller, and we were still
+able to trust everyone
+- This is no longer the the case
+```
+
+**b. DNS vulnerabilities**
+```
+- DNS spoofing: Attacker redirects traffic by altering DNS records
+- Cache poisoning: Attacker inserts malicious DNS entries into a DNS resolver's cache
+- Man-in-the-middle attacks: Attacker intercepts DNS queries and provides false
+responses
+- We can mitigate some consequences of that, by transferring data (not the DNS queries) via encrypted protocols such as https (and refusing to accept invalid certificates)
+```
+
+**c. DNS solution**
+```
+We could also mitigate the problem on a DNS level:  `DNSSEC (DNS Security Extensions)`
+```
+
+### 4. Manually resolve an IP address
+
+**We can edit the following file:**
+```
+# folder
+> /etc/hosts
+
+#The syntax is as follows:
+> <ip> <host>
+```
+**Example:**
+```
+> 127.0.0.1 localhost
+
+# But we can also specify any other domain that should resolve to another IP:
+> 127.0.0.1 my-project.project
+> 127.0.0.1 google.com
+> 192.168.1.4 backup-server
+```
+
+### 5. Refreshing the local DNS server
+
+**a. Find out local resolver**
+
+```
+# command:
+> sudo lsof -i :53
+
+# result: It mean systemd-resolve is DNS resolver
+COMMAND   PID            USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+systemd-r 609 systemd-resolve   13u  IPv4  22147      0t0  UDP localhost:domain
+systemd-r 609 systemd-resolve   14u  IPv4  22148      0t0  TCP localhost:domain(LISTEN)
+```
+
+**b. If using `systemd-resolve` above**
+```
+# to refresh resolver cache:
+> sudo resolvectl flush-caches
+
+# show status
+> sudo resolvectl status
+> sudo resolvectl statistics
+```
+
+**c. If NOT using `systemd-resolve`**
+```
+> sudo systemctl restart dnsmasq
+```
+
+## IX: `TPCDUMP` program:
+
+### 1. `TCPDUMP` command
+**command**
+```
+> tcpdump -n -v -i [interface_name] [package_name]
+
+
+# capture packages from src
+> tcpdump -n -v -i [interface_name] src [host_name / IP]
+
+# example
+> tcpdump -n -v -i enp0s8 src 172.217.25.14
+> tcpdump -n -v -i enp0s8 src 172.217.25.14 or dst 172.217.25.14
+
+
+# describe:
+  -i: interface
+  -n: Don't convert addresses (i.e., host addresses, port numbers, etc.) to names.
+
+```
+
+### 2. `TCPDUMP` capture IP, ARP and ICMP packages
+**example: `arp` package**
+```
+- Step1: inside the host (runner01 - 192.168.56.98) we want to check run command:
+> tcpdump -i enp0s8 arg
+
+- Step2: inside another host (myhost - 192.168.56.1 - same network) let try ping to other computer(haproxy01 - 192.168.56.166 same network)
+> ping 192.168.56.166
+
+- Step3: check `tcpdump` logs:
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on enp0s8, link-type EN10MB (Ethernet), capture size 262144 bytes
+14:12:24.454914 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:25.462231 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:26.486551 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:27.511203 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:28.535727 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:29.560194 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:30.584747 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:31.609236 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+14:12:32.633640 ARP, Request who-has 192.168.56.166 tell duongdx, length 46
+```
+
+**example: `icmp` package**
+```
+- Step1: inside the host (runner01 - 192.168.56.98) we want to check run command:
+> tcpdump -i enp0s8 icpm
+
+- Step2: inside another host (myhost - 192.168.56.1 - same network) let try ping to other computer(runner01 - 192.168.56.98)
+> ping 192.168.56.98
+
+- Step3: check `tcpdump` logs:
+
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on enp0s8, link-type EN10MB (Ethernet), capture size 262144 bytes
+14:27:45.981423 IP 192.168.56.1 > 192.168.56.98: ICMP echo request, id 5, seq 1, length 64
+14:27:45.981483 IP 192.168.56.98 > 192.168.56.1: ICMP echo reply, id 5, seq 1, length 64
+14:27:46.993132 IP 192.168.56.1 > 192.168.56.98: ICMP echo request, id 5, seq 2, length 64
+14:27:46.993201 IP 192.168.56.98 > 192.168.56.1: ICMP echo reply, id 5, seq 2, length 64
+14:27:48.017626 IP 192.168.56.1 > 192.168.56.98: ICMP echo request, id 5, seq 3, length 6
+```
+
+### 3. `TCPDUMP` UDP packages
+
+**Example 1: DNS query**
+```
+# tcpdump command:
+> tcpdump -n -v -i enp0s8 src 8.8.8.8 or dst 8.8.8.8
+
+# testing with nslookup
+> nslookup duongdx.com 8.8.8.8
+
+# result:
+tcpdump: listening on enp0s3, link-type EN10MB (Ethernet), capture size 262144 bytes
+15:27:28.003552 IP (tos 0x0, ttl 64, id 16212, offset 0, flags [none], proto UDP (17), length 57)
+    10.0.2.15.35970 > 8.8.8.8.53: 5388+ A? duongdx.com. (29)
+15:27:28.286703 IP (tos 0x0, ttl 64, id 1075, offset 0, flags [none], proto UDP (17), length 117)
+    8.8.8.8.53 > 10.0.2.15.35970: 5388 0/1/0 (89)
+15:27:28.290798 IP (tos 0x0, ttl 64, id 16252, offset 0, flags [none], proto UDP (17), length 57)
+    10.0.2.15.36956 > 8.8.8.8.53: 63871+ AAAA? duongdx.com. (29)
+15:27:28.335853 IP (tos 0x0, ttl 64, id 1076, offset 0, flags [none], proto UDP (17), length 117)
+    8.8.8.8.53 > 10.0.2.15.36956: 63871 0/1/0 (89)
+```
+
+### 4. `TCPDUMP` TCP packages
+
+**Example 1: Testing with http on port 80**
+```
+# tcpdump command:
+> tcpdump -n -v -i [interface] src [source_ip] or dst [destination_ip] and port [port_number]
+
+> tcpdump -n -v -i enp0s8 src 54.179.173.60 or dst 54.179.173.60 and port 80
+
+# testing with curl command
+> curl mailchimp.com/marketing-glossary/landing-pages/
 ```
