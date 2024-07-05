@@ -131,9 +131,9 @@ policy to determine if access should be granted
 - It further restricts DAC and makes our system more secure
 ```
 
-## IV. SELinux Detail:
+## IV. `SELinux` MAC:
 
-### 1. SELinux: Checking the status, enable, disable
+### 1. `SELinux`: Checking the status, enable, disable
 
 **Check `SELinux` status**:
 ```
@@ -181,7 +181,7 @@ folder
     + We should consider if we really want to do this
 ```
 
-### 2. File contexts in SELinux
+### 2. File contexts in `SELinux`
 
 ```
 - File contexts are a way of labeling files
@@ -251,4 +251,193 @@ example: unconfined_u:object_r:user_home_t:s0 Desktop
 - A webserver should only be allowed to access httpd_sys_content_t, httpd_config_t, etc_t (and a few others)
 
 - If it tries to access any file with another type - this access is not allowed and thus prevented (if SELinux is enforcing its policy)
+```
+
+### 4. `SELinux` changing file context (chcon, restorecon)
+**introduction**
+```
+- If we create a file, it will inherit the SELinux context from its parent directory
+- Except when the SELinux policy includes a rule that overrides this default behavior (type transition)
+- Let's have a look at this!
+```
+
+**`chcon`: command - change file/folder context**
+```
+# command:
+> chcon [-u USER] [-r ROLE] [-t TYPE] [-R] [-v] FILE
+
+# notes
+-R: Recursive
+-v: Verbose (print which files have been changed)
+```
+
+**Example `chcon`:**
+```
+> chcon -t user_home_t -R -v /usr/share/nginx/html/test.html
+```
+
+**`restorecon`: command - reset file/folder context to default context**
+```
+# command:
+> restorecon -R -v folder/file
+
+# notes:
+-R: Recursive
+-v: Verbose (print which files have been changed)
+-F: By default, only the SELinux type is being reset. By adding
+this option, it will also reset the SELinux user & role
+```
+
+
+### 5. `SELinux` How to  default contexts work ?
+
+**5.1 introduction**
+```
+- SELinux somehow used a default context for many files
+- How does this work?
+- Those defaults are defined in the following folder:
+> /etc/selinux/[policy]/contexts
+
+- We can have a look at those, but we should never edit those files directly
+- It's best to use the following command:
+> semanage fcontext -l
+
+- But how can we change the default context?
+```
+
+**5.2 Example**
+```
+# check /etc/selinux/[policy]/contexts
+>  cat /etc/selinux/targeted/contexts/files/file_contexts
+
+# semanage fcontext -l
+> semanage fcontext -l | grep httpd
+> semanage fcontext -l
+```
+
+**5.3 change the default context for file/folder**
+
+command:
+```
+> semanage fcontext -a -t httpd_sys_content_t '/public(/.*)?'
+
+# notes:
+
+-a: We want to add a default context rule (-d would remove one)
+-t: type
+'/public(/.*)?': absolute path with regular expression
+```
+
+create a mapping to an existing context of another folder:
+```
+> semanage fcontext -a -e /usr/share/nginx/html /public
+-e: Defines the mapping
+```
+
+**5.4 Testing**
+
+step1: copy /usr/share/nginx/html to /public folder
+```
+> cp -r html /public/
+```
+
+step2: check /public/html
+```
+# command:
+> ls -Zal /public/html
+
+# result: Default context is `default_t`
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 ..
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 50x.html
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 404.html
+drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 icons
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 en-US -> ../../doc/HTML/en-US
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 poweredby.png -> nginx-logo.png
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 nginx-logo.png
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 index.html -> ../../doc/HTML/index.html
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 img -> ../../doc/HTML/img
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 system-file -> /
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 test.html
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 file.txt
+drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 .
+```
+step3: set default context for /public/html:
+```
+# command:
+> semanage fcontext -a -t httpd_sys_content_t '/public(/.*)?'
+
+# list up default context:
+> semanage fcontext -l | grep httpd_sys_content_t
+
+# check result of list up default context:
+....
+/usr/share/selinux-policy[^/]*/html(/.*)?          all files          system_u:object_r:httpd_sys_content_t:s0
+#=============================HERE========================================
+/public(/.*)?                                      all files          system_u:object_r:httpd_sys_content_t:s0
+#=============================END========================================
+
+
+# check /public/html
+# result: Default context is `default_t`
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 ..
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 50x.html
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 404.html
+drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 icons
+...
+lrwxrwxrwx. root root unconfined_u:object_r:default_t:s0 system-file -> /
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 test.html
+-rw-r--r--. root root unconfined_u:object_r:default_t:s0 file.txt
+drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 .
+```
+
+Step 4: reset to /public/html/ to default context
+```
+# command:
+> restorecon -R -F -v /public/
+
+# recheck /public/html
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 ..
+-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 50x.html
+-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 404.html
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 icons
+...
+lrwxrwxrwx. root root system_u:object_r:httpd_sys_content_t:s0 system-file -> /
+-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 test.html
+-rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 file.txt
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 .
+```
+
+## V. `SELinux` Process:
+
+### 1. Introduction
+```
+All processes on our system run with a specific SELinux security context
+
+This includes:
+- A SELinux user
+- A SELinux role
+- A SELinux type
+
+This security context is used to define which files a process can access
+This provides an additional layer of security
+```
+
+### 2. check context of process:
+```
+> ps -Z
+> ps -efZ
+> ps aux -Z
+```
+
+### 3. how does the policy look like ?
+```
+We can have a look at the upstream policy:
+- Upstream = The version provided by the SELinux project
+- The actual policy that is running on our machine might be different!
+- https://github.com/SELinuxProject/refpolicy
+
+The file types:
+- `.fc`: File context definitions
+- `.te`: Type enforcement rules, defines transitions
+- .if: Contains interfaces / functions that can be used in the .te file
 ```
