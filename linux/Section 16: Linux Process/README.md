@@ -45,7 +45,7 @@ root      2167  0.0  0.1 1235828 3404 ?        Sl   09:48   0:00 /usr/bin/docker
 # get processID
 > ps aux | pgrep docker
 
-> Result:
+# Result:
 1621
 2159
 2167
@@ -53,6 +53,18 @@ root      2167  0.0  0.1 1235828 3404 ?        Sl   09:48   0:00 /usr/bin/docker
 2190
 2207
 2215
+
+# get process:
+> ps -eo pid,ppid,user,group,comm
+
+# Result:
+PID  PPID USER     GROUP    COMMAND
+1     0 root     root     systemd
+2     0 root     root     kthreadd
+3     2 root     root     kworker/0:0
+4     2 root     root     kworker/0:0H
+5     2 root     root     kworker/u2:0
+6     2 root     root     mm_percpu_wq
 ```
 ### 4. Signal:
 
