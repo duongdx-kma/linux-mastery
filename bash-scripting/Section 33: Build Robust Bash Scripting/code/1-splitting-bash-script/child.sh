@@ -1,4 +1,4 @@
-#!/usr/bin/evn bash
+#!/usr/bin/env bash
 
 echo "this is child.sh, the city is: ${city}"
 
