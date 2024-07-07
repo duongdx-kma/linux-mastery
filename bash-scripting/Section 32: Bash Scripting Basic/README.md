@@ -15,9 +15,9 @@ Example:
   echo 'hello from a bash script'
 ```
 
-### 2. comment:
+## II. comment:
 
-**introduction**
+### 1. introduction
 ```
 - Comments in Bash start with a single `#`
 
@@ -28,7 +28,7 @@ Example:
     + This is not a real comment, and should not be used as such
 ```
 
-**multi-line comment as such:**
+### 2. multi-line comment as such:
 ```
 : << 'my_command'
 This here is the content of the comment. Hello world!
@@ -36,7 +36,7 @@ hello
 my_command
 ```
 
-**insert multiple lines to file with `EOF`: we can override `EOF` with anything (it must same with `first` and `end` of sentences)**
+### 3. insert multiple lines to file with `EOF`: we can override `EOF` with anything (it must same with `first` and `end` of sentences)
 ```
 cat << EOF | tee duongdx.txt  
 There are the content which will be append to duongdx.dx file !
@@ -51,9 +51,9 @@ hello duongdx
 duongdx_file
 ```
 
-### 3. Bash variable:
+## III. Bash variable:
 
-**`bash variables`: best practices**
+### 1. `bash variables`: best practices
 ```
 - Avoid using special characters or reserved keywords
 - Try to using Bash variables, unless you need to using an environment variable
@@ -61,32 +61,32 @@ duongdx_file
 - Use lowercase characters, and separate word by an '_': example: my_host
 ```
 
-### 4. Bash variables vs Environment variables
+## IV. Bash variables vs Environment variables
 
-**Environment variables:**
+### 1. Environment variables:
 ```
 - A feature of the operating system
 - They work independently of the program / programming language
 - They are automatically inherited to child processes
 ```
 
-**Bash variables:**
+### 2. Bash variables:
 ```
 - A feature of Bash
 - They work within a single Bash context
 - They are not inherited to child processes
 ```
 
-**Best practice**
+### 3. Best practice
 ```
 - Use Bash variables whenever possible
 - Use environment variables when you want those to be
 inherited to child processes
 ```
 
-### 5. Declare variables `errors`:
+## V. Define variables `errors`:
 
-**Error_1: variable_name= value**
+### 1. Error_1: variable_name= value
 ```
 - We create an temporary environment variable variable_name and set it to ''
 - After that, we execute value with this environment variable
@@ -94,20 +94,20 @@ inherited to child processes
 - Bash will execute variable_name as a command with the
 ```
 
-**Error_2: parameter =value**
+### 2. Error_2: parameter =value
 ```
 - Most likely, the command variable_name will not exist, thus
 yielding an error
 ```
 
-**Error_3: variable_name = value**
+### 3. Error_3: variable_name = value
 ```
 - Bash will execute variable_name as a command with 2 parameters: '=' and 'value'
 ```
 
-### 6. Declare variable:
+## VI. Declare variable:
 
-**Syntax:**
+### 1. Syntax:
 ```
 - declare [options] variable_name=value
 - Options (examples):
@@ -116,14 +116,14 @@ yielding an error
   -x: Declares an environment variable
 ```
 
-**Example:**
+### 2. Example:
 ```
 - declare -r course_title='Linux'
 - This variable is now read-only, and cannot be changed
 ```
 
 
-**display all declare variables:**
+### 3. display all declare variables:
 ```
 # command:
 - declare -p
@@ -142,25 +142,75 @@ declare -a GROUPS=()
 ...
 ```
 
-### 7. unset command:
+## VII. unset command:
 
-**Most often:**
+### 1. Most often:
 - We never unset a variable
 - Bash scripts are not that long anyway
 - And once finished, our whole Bash process is removed from memory anyway
 
-**Method 1: assign an empty value to a variable:**
+### 2. Method 1: assign an empty value to a variable:
 ```
 - course_title=
 - But this does not remove the variable
 - The variable still exists (it's just set to the empty string)
 ```
 
-**Really remove a variable:**
+### 3. Really remove a variable:
 ```
 # command:
 - unset [variable_name]
 
 # example:
 - unset course_title
+```
+
+## VIII. read user input:
+
+### 1. introduction
+```
+Use the read command to prompt the user for input and store it in a variable:
+> read -p 'Enter your name: ' name
+
+# using `read` for multiple variables
+- We can also read multiple values with just one read command:
+> read [variable1] [variable2]
+
+- Here, the input will be split into 2 segments:
+  + The first word will be written into the variable [variable1]
+  + All the remaining words will be written into [variable2]
+```
+
+### 2. Advanced read usage: IFS
+```
+- In Bash, the variable IFS controls how whitespace is being handled by certain commands
+- The IFS variable is a Bash variable
+- By default, it contains the following characters:
+- space, tab, newline
+- IFS=$' \t\n'
+```
+
+### 3. command
+```
+> read - [variable]
+or
+> read [variable1] [variable2]
+```
+
+## IX. Reading file content:
+
+### 1. normal way"
+```
+- Here, we're using command substitution to execute the cat program
+- Then, we collect its output and store it in the variable file_content
+
+> file_content="$(cat file.txt)"
+```
+
+### 2. more efficient way:
+```
+- '<' would normally be used for input redirection
+- '<' means that we want to read the contents of the file
+
+> file_content_efficient="$(< file.txt)"
 ```

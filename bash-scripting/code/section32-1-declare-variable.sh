@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #===================================
-# normal delaration
+# normal declaration
 # username="Xuanduong" (same | equivalent)
 #===================================
 declare username="Xuanduong"
@@ -16,6 +16,6 @@ declare -r user_address="HaNoi-VietNam"
 # integer variable
 #===================================
 declare -i user_age=22
-# user_age=twentythree # this statement will be error
+# user_age='twenty three' # this statement will be error
 
 echo "hello ${username}, have a good day! Are you from ${user_address}, right ? age = ${user_age}"
