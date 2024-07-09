@@ -153,5 +153,5 @@ null
 
 **get array length**
 ```
-> cat  api.json | jq '. | length' 
+> cat  api.json | jq '. | length'
 ```
