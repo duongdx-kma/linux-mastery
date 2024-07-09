@@ -4,7 +4,7 @@
 # Can we also ignore if a few images can't be found, and keep trying (for up to a few images, like 10 images or so)?
 
 declare -r source_url="https://downloads.codingcoursestv.eu/055%20-%20bash/while/images/image-%%.jpg"
-declare -r tex_red="$(tput setaf 1)"
+declare -r text_red="$(tput setaf 1)"
 declare -r text_green="$(tput setaf 2)"
 declare -r text_blue="$(tput setaf 4)"
 declare -r text_bold=$(tput bold)
@@ -32,6 +32,6 @@ while [[ start -lt desired_number ]]; do
     if [[ $? -eq 0 ]]; then
         echo "the ${text_green}${text_bold}${image_name}${text_reset} download completed successfully!"
     else
-        echo "the ${tex_red}${text_bold}${image_name}${text_reset} don't exists -> next..."
+        echo "the ${text_red}${text_bold}${image_name}${text_reset} don't exists -> next..."
     fi
 done

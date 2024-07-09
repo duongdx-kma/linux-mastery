@@ -11,7 +11,7 @@
 # Idea: You can pipe the output of systemctl status [unit] into a grep
 # ...ping a remote webserver a few times, and print out the whole result
 
-declare -r tex_red="$(tput setaf 1)"
+declare -r text_red="$(tput setaf 1)"
 declare -r text_green="$(tput setaf 2)"
 declare -r text_blue="$(tput setaf 4)"
 declare -r text_bold=$(tput bold)

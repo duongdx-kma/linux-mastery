@@ -10,7 +10,7 @@
 
 # define variables
 declare -r api_url="https://downloads.codingcoursestv.eu/055%20-%20bash/api/api.php"
-declare -r tex_red="$(tput setaf 1)"
+declare -r text_red="$(tput setaf 1)"
 declare -r text_green="$(tput setaf 2)"
 declare -r text_yellow="$(tput setaf 3)"
 declare -r text_blue="$(tput setaf 4)"
@@ -34,7 +34,7 @@ fahrenheit=$(echo "scale=2; $temperature * (9 / 5) + 32" | bc)
 if [[ $temperature -gt 25 ]]; then
     text_temperature=$text_yellow
 elif [[ $temperature -gt 30 ]]; then
-    text_temperature=$tex_red
+    text_temperature=$text_red
 else
     text_temperature=$text_green
 fi

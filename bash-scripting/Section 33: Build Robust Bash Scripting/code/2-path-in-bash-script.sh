@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -r tex_red="$(tput setaf 1)"
+declare -r text_red="$(tput setaf 1)"
 declare -r text_green="$(tput setaf 2)"
 declare -r text_blue="$(tput setaf 4)"
 declare -r text_bold=$(tput bold)

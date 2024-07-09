@@ -10,7 +10,7 @@
 
 # define variables
 declare -r api_url="https://downloads.codingcoursestv.eu/055%20-%20bash/api/api.php"
-declare -r tex_red="$(tput setaf 1)"
+declare -r text_red="$(tput setaf 1)"
 declare -r text_green="$(tput setaf 2)"
 declare -r text_blue="$(tput setaf 4)"
 declare -r text_bold=$(tput bold)
